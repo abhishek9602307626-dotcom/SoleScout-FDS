@@ -1,0 +1,1639 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SoleScout — Sneaker Price Intelligence & Analytics</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- React 18 & ReactDOM -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <!-- Babel for JSX -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <!-- Chart.js for reliable in-browser canvas rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #020617; color: #f8fafc; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen antialiased">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // API Helpers
+    const fetchApi = async (endpoint) => {
+      const res = await fetch(`/api${endpoint}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      return res.json();
+    };
+
+    function App() {
+      const [page, setPage] = useState('dashboard');
+      const [demoMode, setDemoMode] = useState(true);
+      const [selectedProduct, setSelectedProduct] = useState(null);
+      const [apiHealthy, setApiHealthy] = useState(null);
+      const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+      useEffect(() => {
+        fetchApi('/health')
+          .then(data => setApiHealthy(data.status === 'healthy'))
+          .catch(() => setApiHealthy(false));
+      }, []);
+
+      const navItems = [
+        { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+        { id: 'products', label: 'Products', icon: '👟' },
+        { id: 'product-details', label: 'Product Details', icon: '🔍' },
+        { id: 'compare', label: 'Compare', icon: '⚖️' },
+        { id: 'price-trends', label: 'Price Trends', icon: '📈' },
+        { id: 'brand-analytics', label: 'Brand Analytics', icon: '🏷️' },
+        { id: 'statistical-analysis', label: 'Statistical Analysis', icon: '🔬', badge: 'FDS' },
+        { id: 'data-quality', label: 'Data Quality', icon: '🛡️' },
+        { id: 'about', label: 'About Project', icon: 'ℹ️' },
+      ];
+
+      return (
+        <div className="min-h-screen flex flex-col lg:flex-row bg-slate-950 text-slate-100">
+          {/* Sidebar */}
+          <aside className="w-full lg:w-72 bg-slate-950/95 border-b lg:border-b-0 lg:border-r border-slate-800/80 p-5 flex flex-col justify-between shrink-0">
+            <div>
+              {/* Brand Header */}
+              <div className="flex items-center justify-between pb-6 border-b border-slate-800/80">
+                <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setPage('dashboard')}>
+                  <div className="h-10 w-10 rounded-2xl bg-indigo-600 flex items-center justify-center text-xl shadow-lg shadow-indigo-600/30">
+                    👟
+                  </div>
+                  <div>
+                    <h1 className="font-bold text-base text-white tracking-tight flex items-center gap-1.5">
+                      SoleScout
+                      <span className="text-[10px] font-bold bg-indigo-500/20 text-indigo-400 px-1.5 py-0.5 rounded border border-indigo-500/30">FDS</span>
+                    </h1>
+                    <p className="text-[11px] text-slate-400">Sneaker Price Intelligence</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Navigation Items */}
+              <nav className="py-5 space-y-1">
+                <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Analytics Suite</p>
+                {navItems.map(item => (
+                  <button
+                    key={item.id}
+                    onClick={() => { setPage(item.id); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                      page === item.id
+                        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
+                        : 'text-slate-400 hover:bg-slate-900 hover:text-white'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <span>{item.icon}</span>
+                      <span>{item.label}</span>
+                    </div>
+                    {item.badge && (
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                        page === item.id ? 'bg-white/20 text-white' : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
+                      }`}>
+                        {item.badge}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </nav>
+            </div>
+
+            {/* Sidebar Footer Controls */}
+            <div className="pt-4 border-t border-slate-800/80 space-y-3">
+              <div className="flex items-center justify-between rounded-xl bg-slate-900/60 p-3 border border-slate-800 text-xs">
+                <div>
+                  <p className="font-semibold text-slate-200">Include Demo Data</p>
+                  <p className="text-[10px] text-slate-400">Multi-brand sample snapshots</p>
+                </div>
+                <button
+                  onClick={() => setDemoMode(!demoMode)}
+                  className={`h-5 w-9 rounded-full transition-colors relative flex items-center p-0.5 ${demoMode ? 'bg-indigo-600' : 'bg-slate-700'}`}
+                >
+                  <span className={`h-4 w-4 rounded-full bg-white transition-transform ${demoMode ? 'translate-x-4' : 'translate-x-0'}`} />
+                </button>
+              </div>
+
+              <div className="rounded-xl bg-indigo-950/20 border border-indigo-500/20 p-3 text-center text-xs">
+                <p className="font-bold text-indigo-300">Fundamentals of Data Science</p>
+                <p className="text-[10px] text-slate-400 mt-0.5">College Project • Semester Demonstration</p>
+              </div>
+            </div>
+          </aside>
+
+          {/* Main Content Area */}
+          <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
+            {/* Header */}
+            <header className="h-16 border-b border-slate-800/80 bg-slate-950/80 px-6 flex items-center justify-between backdrop-blur-xl shrink-0">
+              <div className="flex items-center space-x-3">
+                <h2 className="text-base font-bold text-white capitalize">
+                  {page.replace('-', ' ')}
+                </h2>
+              </div>
+
+              <div className="flex items-center space-x-3 text-xs">
+                {demoMode && (
+                  <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-amber-300 font-medium">
+                    <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+                    Sample Mode Active
+                  </span>
+                )}
+                <div className={`flex items-center space-x-2 rounded-xl border px-3 py-1 font-medium ${
+                  apiHealthy === true
+                    ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+                    : 'border-rose-500/30 bg-rose-500/10 text-rose-300'
+                }`}>
+                  <span className={`h-2 w-2 rounded-full ${apiHealthy === true ? 'bg-emerald-400' : 'bg-rose-400 animate-pulse'}`} />
+                  <span>{apiHealthy === true ? 'FastAPI Connected' : 'API Connecting...'}</span>
+                </div>
+              </div>
+            </header>
+
+            {/* Dynamic Page Router */}
+            <main className="flex-1 p-6 md:p-8 max-w-7xl mx-auto w-full">
+              {page === 'dashboard' && <DashboardView demoMode={demoMode} onSelectProduct={(id) => { setSelectedProduct(id); setPage('product-details'); }} onNavigate={setPage} />}
+              {page === 'products' && <ProductsView demoMode={demoMode} onSelectProduct={(id) => { setSelectedProduct(id); setPage('product-details'); }} />}
+              {page === 'product-details' && <ProductDetailView productId={selectedProduct} demoMode={demoMode} onNavigate={setPage} />}
+              {page === 'compare' && <CompareView demoMode={demoMode} initialId={selectedProduct} />}
+              {page === 'price-trends' && <PriceTrendsView demoMode={demoMode} />}
+              {page === 'brand-analytics' && <BrandAnalyticsView demoMode={demoMode} />}
+              {page === 'statistical-analysis' && <StatisticalAnalysisView demoMode={demoMode} />}
+              {page === 'data-quality' && <DataQualityView />}
+              {page === 'about' && <AboutView />}
+            </main>
+
+            {/* Institutional Footer */}
+            <footer className="border-t border-slate-900 bg-slate-950 py-5 px-8 text-center text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <p>SoleScout Sneaker Price Intelligence & Analytics • College FDS Project</p>
+              <div className="flex items-center space-x-3 text-slate-400">
+                <span>FastAPI Backend v2.0.0</span>
+                <span>•</span>
+                <span>SciPy Hypothesis Engine</span>
+              </div>
+            </footer>
+          </div>
+        </div>
+      );
+    }
+
+    // -----------------------------------------------------------------------
+    // PAGE 1: DASHBOARD VIEW
+    // -----------------------------------------------------------------------
+    function DashboardView({ demoMode, onSelectProduct, onNavigate }) {
+      const [dash, setDash] = useState(null);
+      const [loading, setLoading] = useState(true);
+      const [error, setError] = useState(null);
+
+      const chartTrendRef = useRef(null);
+      const chartBrandRef = useRef(null);
+      const chartCountRef = useRef(null);
+      const chartDistRef = useRef(null);
+
+      useEffect(() => {
+        setLoading(true);
+        fetchApi(`/dashboard?include_demo=${demoMode}`)
+          .then(data => { setDash(data); setLoading(false); })
+          .catch(err => { setError(err.message); setLoading(false); });
+      }, [demoMode]);
+
+      useEffect(() => {
+        if (!dash || dash.is_empty) return;
+
+        // 1. Price Trend Chart
+        if (chartTrendRef.current) {
+          const ctx = chartTrendRef.current.getContext('2d');
+          if (window._chartTrend) window._chartTrend.destroy();
+          window._chartTrend = new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: dash.price_trends.map(t => t.date),
+              datasets: [{
+                label: 'Average Price ($)',
+                data: dash.price_trends.map(t => t.avg_price),
+                borderColor: '#6366f1',
+                backgroundColor: 'rgba(99, 102, 241, 0.15)',
+                fill: true,
+                tension: 0.3,
+                borderWidth: 2.5,
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: {
+                x: { grid: { color: '#1e293b' }, ticks: { color: '#64748b', font: { size: 10 } } },
+                y: { grid: { color: '#1e293b' }, ticks: { color: '#64748b', callback: v => `$${v}`, font: { size: 10 } } }
+              }
+            }
+          });
+        }
+
+        // 2. Average Price by Brand
+        if (chartBrandRef.current) {
+          const ctx = chartBrandRef.current.getContext('2d');
+          if (window._chartBrand) window._chartBrand.destroy();
+          window._chartBrand = new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels: dash.brand_comparison.map(b => b.brand),
+              datasets: [{
+                label: 'Mean Price ($)',
+                data: dash.brand_comparison.map(b => b.mean_price),
+                backgroundColor: '#818cf8',
+                borderRadius: 6,
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: {
+                x: { grid: { color: '#1e293b' }, ticks: { color: '#64748b', font: { size: 10 } } },
+                y: { grid: { color: '#1e293b' }, ticks: { color: '#64748b', callback: v => `$${v}`, font: { size: 10 } } }
+              }
+            }
+          });
+        }
+
+        // 3. Product Count by Brand
+        if (chartCountRef.current) {
+          const ctx = chartCountRef.current.getContext('2d');
+          if (window._chartCount) window._chartCount.destroy();
+          window._chartCount = new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels: dash.brand_comparison.map(b => b.brand),
+              datasets: [{
+                label: 'Products Tracked',
+                data: dash.brand_comparison.map(b => b.count),
+                backgroundColor: '#a78bfa',
+                borderRadius: 6,
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: {
+                x: { grid: { color: '#1e293b' }, ticks: { color: '#64748b', font: { size: 10 } } },
+                y: { grid: { color: '#1e293b' }, ticks: { color: '#64748b', stepSize: 1, font: { size: 10 } } }
+              }
+            }
+          });
+        }
+
+        // 4. Price Distribution
+        if (chartDistRef.current) {
+          const ctx = chartDistRef.current.getContext('2d');
+          if (window._chartDist) window._chartDist.destroy();
+          window._chartDist = new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels: dash.price_distribution.map(d => d.range),
+              datasets: [{
+                label: 'Products in Bucket',
+                data: dash.price_distribution.map(d => d.count),
+                backgroundColor: '#38bdf8',
+                borderRadius: 6,
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: {
+                x: { grid: { color: '#1e293b' }, ticks: { color: '#64748b', font: { size: 9 } } },
+                y: { grid: { color: '#1e293b' }, ticks: { color: '#64748b', stepSize: 1, font: { size: 10 } } }
+              }
+            }
+          });
+        }
+      }, [dash]);
+
+      if (loading) return <div className="text-center py-20 text-slate-400">Loading intelligence dashboard...</div>;
+      if (error) return <div className="p-6 rounded-2xl bg-rose-950/20 border border-rose-500/30 text-rose-300">Error: {error}</div>;
+      if (!dash || dash.is_empty) return (
+        <div className="p-12 text-center rounded-2xl border border-dashed border-slate-800 bg-slate-900/40">
+          <h3 className="text-lg font-bold text-white">No SoleScout data has been collected yet.</h3>
+          <p className="text-xs text-slate-400 mt-2">Run the collector or toggle Demo Mode in the sidebar.</p>
+        </div>
+      );
+
+      const d = dash.descriptive_summary;
+
+      return (
+        <div className="space-y-8">
+          {/* 7 KPI CARDS */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+            <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800">
+              <p className="text-[10px] uppercase font-bold text-slate-400">Total Products</p>
+              <h3 className="text-2xl font-black text-white mt-1">{dash.total_products}</h3>
+              <p className="text-[10px] text-slate-400 mt-0.5">Catalog models</p>
+            </div>
+            <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800">
+              <p className="text-[10px] uppercase font-bold text-slate-400">Total Brands</p>
+              <h3 className="text-2xl font-black text-indigo-400 mt-1">{dash.unique_brands}</h3>
+              <p className="text-[10px] text-slate-400 mt-0.5">Makers</p>
+            </div>
+            <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800">
+              <p className="text-[10px] uppercase font-bold text-slate-400">Average Price</p>
+              <h3 className="text-2xl font-black text-emerald-400 mt-1">${d.mean ? d.mean.toFixed(2) : 'N/A'}</h3>
+              <p className="text-[10px] text-slate-400 mt-0.5">Mean price</p>
+            </div>
+            <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800">
+              <p className="text-[10px] uppercase font-bold text-slate-400">Minimum Price</p>
+              <h3 className="text-2xl font-black text-slate-300 mt-1">${d.min_price ? d.min_price.toFixed(0) : 'N/A'}</h3>
+              <p className="text-[10px] text-slate-400 mt-0.5">Floor</p>
+            </div>
+            <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800">
+              <p className="text-[10px] uppercase font-bold text-slate-400">Maximum Price</p>
+              <h3 className="text-2xl font-black text-amber-400 mt-1">${d.max_price ? d.max_price.toFixed(0) : 'N/A'}</h3>
+              <p className="text-[10px] text-slate-400 mt-0.5">Peak</p>
+            </div>
+            <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800">
+              <p className="text-[10px] uppercase font-bold text-slate-400">Snapshots</p>
+              <h3 className="text-2xl font-black text-violet-400 mt-1">{dash.total_snapshots}</h3>
+              <p className="text-[10px] text-slate-400 mt-0.5">Time observations</p>
+            </div>
+            <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800">
+              <p className="text-[10px] uppercase font-bold text-slate-400">Collection Days</p>
+              <h3 className="text-2xl font-black text-sky-400 mt-1">{dash.price_trends.length} d</h3>
+              <p className="text-[10px] text-slate-400 mt-0.5">Timeline span</p>
+            </div>
+          </div>
+
+          {/* 4 CHARTS GRID */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800">
+              <h4 className="text-sm font-bold text-white mb-1">Average Price Over Time</h4>
+              <p className="text-xs text-slate-400 mb-4">Historical daily price trajectory</p>
+              <div className="h-64 relative"><canvas ref={chartTrendRef}></canvas></div>
+            </div>
+
+            <div className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800">
+              <h4 className="text-sm font-bold text-white mb-1">Average Price by Brand</h4>
+              <p className="text-xs text-slate-400 mb-4">Cross-sectional brand price comparisons</p>
+              <div className="h-64 relative"><canvas ref={chartBrandRef}></canvas></div>
+            </div>
+
+            <div className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800">
+              <h4 className="text-sm font-bold text-white mb-1">Product Count by Brand</h4>
+              <p className="text-xs text-slate-400 mb-4">Catalog volume distribution</p>
+              <div className="h-64 relative"><canvas ref={chartCountRef}></canvas></div>
+            </div>
+
+            <div className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800">
+              <h4 className="text-sm font-bold text-white mb-1">Price Distribution</h4>
+              <p className="text-xs text-slate-400 mb-4">Binned price frequency histogram</p>
+              <div className="h-64 relative"><canvas ref={chartDistRef}></canvas></div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // -----------------------------------------------------------------------
+    // PAGE 2: PRODUCTS VIEW
+    // -----------------------------------------------------------------------
+    function ProductsView({ demoMode, onSelectProduct }) {
+      const [products, setProducts] = useState([]);
+      const [search, setSearch] = useState('');
+      const [brand, setBrand] = useState('');
+      const [page, setPage] = useState(1);
+      const [totalPages, setTotalPages] = useState(1);
+      const [loading, setLoading] = useState(true);
+
+      const load = () => {
+        setLoading(true);
+        fetchApi(`/products?page=${page}&limit=12&search=${encodeURIComponent(search)}&brand=${encodeURIComponent(brand)}&include_demo=${demoMode}`)
+          .then(data => {
+            setProducts(data.items);
+            setTotalPages(data.total_pages);
+            setLoading(false);
+          })
+          .catch(() => setLoading(false));
+      };
+
+      useEffect(() => { load(); }, [page, brand, demoMode]);
+
+      return (
+        <div className="space-y-6">
+          <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 flex flex-wrap gap-3 items-center justify-between">
+            <form onSubmit={e => { e.preventDefault(); setPage(1); load(); }} className="flex-1 min-w-[240px]">
+              <input
+                type="text"
+                placeholder="Search sneaker models, style code, SKU..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+              />
+            </form>
+            <select
+              value={brand}
+              onChange={e => { setBrand(e.target.value); setPage(1); }}
+              className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none"
+            >
+              <option value="">All Brands</option>
+              <option value="Air Jordan">Air Jordan</option>
+              <option value="Nike">Nike</option>
+              <option value="adidas">adidas</option>
+              <option value="New Balance">New Balance</option>
+            </select>
+          </div>
+
+          {loading ? (
+            <div className="text-center py-20 text-slate-500 text-xs">Querying product catalog...</div>
+          ) : products.length === 0 ? (
+            <div className="p-12 text-center text-slate-400">No sneakers found matching filter.</div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {products.map(p => (
+                <div
+                  key={p.id}
+                  onClick={() => onSelectProduct(p.product_id)}
+                  className="p-5 rounded-3xl bg-slate-900/60 border border-slate-800 hover:border-indigo-500/50 cursor-pointer transition-all hover:-translate-y-1 shadow-xl flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="h-40 rounded-2xl bg-slate-950 flex items-center justify-center p-3 mb-3 border border-slate-800/80">
+                      {p.image_url ? (
+                        <img src={p.image_url} alt={p.name} className="h-full w-full object-contain" />
+                      ) : <span className="text-4xl">👟</span>}
+                    </div>
+                    <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">{p.brand || 'Unbranded'}</span>
+                    <h4 className="text-xs font-bold text-white line-clamp-1 mt-1">{p.name}</h4>
+                    <p className="text-[10px] font-mono text-slate-400 mt-0.5">{p.product_id}</p>
+                  </div>
+
+                  <div className="mt-4 pt-3 border-t border-slate-800 flex justify-between items-baseline">
+                    <div>
+                      <span className="text-[9px] text-slate-400 uppercase">Market</span>
+                      <p className="text-base font-extrabold text-white">${p.latest_price ? p.latest_price.toFixed(2) : 'N/A'}</p>
+                    </div>
+                    {p.resale_premium_pct !== null && (
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${p.resale_premium_pct >= 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
+                        {p.resale_premium_pct >= 0 ? `+${p.resale_premium_pct}%` : `${p.resale_premium_pct}%`}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {totalPages > 1 && (
+            <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 flex justify-between items-center text-xs">
+              <span className="text-slate-400">Page {page} of {totalPages}</span>
+              <div className="space-x-2">
+                <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-300 disabled:opacity-40">Previous</button>
+                <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-300 disabled:opacity-40">Next</button>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // -----------------------------------------------------------------------
+    // PAGE 3: PRODUCT DETAIL VIEW
+    // -----------------------------------------------------------------------
+    function ProductDetailView({ productId, demoMode, onNavigate }) {
+      const [product, setProduct] = useState(null);
+      const [history, setHistory] = useState(null);
+      const [loading, setLoading] = useState(true);
+      const chartRef = useRef(null);
+
+      useEffect(() => {
+        if (!productId) {
+          fetchApi(`/products?page=1&limit=1&include_demo=${demoMode}`)
+            .then(res => {
+              if (res.items.length > 0) loadDetails(res.items[0].product_id);
+              else setLoading(false);
+            });
+        } else {
+          loadDetails(productId);
+        }
+      }, [productId, demoMode]);
+
+      const loadDetails = (id) => {
+        setLoading(true);
+        Promise.all([
+          fetchApi(`/products/${encodeURIComponent(id)}`),
+          fetchApi(`/price-history/${encodeURIComponent(id)}?include_demo=${demoMode}`)
+        ]).then(([p, h]) => {
+          setProduct(p);
+          setHistory(h);
+          setLoading(false);
+        }).catch(() => setLoading(false));
+      };
+
+      useEffect(() => {
+        if (!history || !history.snapshots.length || !chartRef.current) return;
+        const ctx = chartRef.current.getContext('2d');
+        if (window._chartProdDetail) window._chartProdDetail.destroy();
+        window._chartProdDetail = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: history.snapshots.map(s => s.collection_date),
+            datasets: [{
+              label: 'Snapshot Price ($)',
+              data: history.snapshots.map(s => s.price),
+              borderColor: '#818cf8',
+              backgroundColor: 'rgba(129, 140, 248, 0.2)',
+              fill: true,
+              tension: 0.2,
+              borderWidth: 2.5,
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: { grid: { color: '#1e293b' }, ticks: { color: '#64748b', font: { size: 10 } } },
+              y: { grid: { color: '#1e293b' }, ticks: { color: '#64748b', callback: v => `$${v}`, font: { size: 10 } } }
+            }
+          }
+        });
+      }, [history]);
+
+      if (loading) return <div className="text-center py-20 text-slate-400">Loading product intelligence...</div>;
+      if (!product) return <div className="text-center py-20 text-slate-400">Please select a product from catalog.</div>;
+
+      return (
+        <div className="space-y-6">
+          <button onClick={() => onNavigate('products')} className="text-xs font-semibold text-slate-400 hover:text-white">← Back to Catalog</button>
+
+          <div className="p-8 rounded-3xl bg-slate-900/60 border border-slate-800 grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="h-60 rounded-2xl bg-slate-950 flex items-center justify-center p-4 border border-slate-800">
+              {product.image_url ? (
+                <img src={product.image_url} alt="" className="max-h-full max-w-full object-contain" />
+              ) : <span className="text-6xl">👟</span>}
+            </div>
+            <div className="lg:col-span-2 flex flex-col justify-between">
+              <div>
+                <span className="text-xs font-bold text-indigo-400 uppercase tracking-wider">{product.brand}</span>
+                <h2 className="text-2xl font-black text-white mt-1">{product.name}</h2>
+                <p className="text-xs font-mono text-slate-400 mt-0.5">Style Code: {product.product_id}</p>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 pt-4 border-t border-slate-800 text-xs">
+                  <div>
+                    <span className="text-slate-400 uppercase text-[10px]">Retail Price</span>
+                    <p className="font-bold text-slate-200 mt-0.5">${product.retail_price?.toFixed(2) || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 uppercase text-[10px]">Release Date</span>
+                    <p className="font-semibold text-slate-200 mt-0.5">{product.release_date || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 uppercase text-[10px]">Observations</span>
+                    <p className="font-bold text-indigo-400 mt-0.5">{product.snapshot_count}</p>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 uppercase text-[10px]">Premium</span>
+                    <p className="font-bold text-emerald-400 mt-0.5">{product.resale_premium_pct ? `+${product.resale_premium_pct}%` : 'N/A'}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 p-4 rounded-2xl bg-slate-950 border border-slate-800 flex justify-between items-center">
+                <div>
+                  <span className="text-xs text-slate-400">Current Market Price</span>
+                  <p className="text-3xl font-black text-white">${product.latest_price?.toFixed(2) || 'N/A'}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800">
+            <h4 className="text-sm font-bold text-white mb-4">Historical Price Trajectory</h4>
+            <div className="h-64 relative"><canvas ref={chartRef}></canvas></div>
+          </div>
+
+          <div className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800">
+            <h4 className="text-sm font-bold text-white mb-4">Recorded SQLite Historical Snapshots</h4>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs text-slate-300">
+                <thead className="border-b border-slate-800 text-slate-400 uppercase tracking-wider">
+                  <tr>
+                    <th className="py-2.5">Date</th>
+                    <th className="py-2.5">Platform</th>
+                    <th className="py-2.5">Price</th>
+                    <th className="py-2.5">Size</th>
+                    <th className="py-2.5">Condition</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/60 font-mono">
+                  {(history?.snapshots || []).map(s => (
+                    <tr key={s.id} className="hover:bg-slate-800/30">
+                      <td className="py-2.5">{s.collection_date}</td>
+                      <td className="py-2.5 font-sans font-semibold text-indigo-400">{s.platform}</td>
+                      <td className="py-2.5 font-bold text-white">${s.price.toFixed(2)}</td>
+                      <td className="py-2.5 text-slate-400">{s.size || 'N/A'}</td>
+                      <td className="py-2.5 text-slate-400 capitalize">{s.condition}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // -----------------------------------------------------------------------
+    // PAGE 4: COMPARE VIEW
+    // -----------------------------------------------------------------------
+    function CompareView({ demoMode, initialId }) {
+      const [all, setAll] = useState([]);
+      const [selected, setSelected] = useState([]);
+
+      useEffect(() => {
+        fetchApi(`/products?page=1&limit=20&include_demo=${demoMode}`)
+          .then(data => {
+            setAll(data.items);
+            if (data.items.length >= 2) {
+              const id1 = initialId || data.items[0].product_id;
+              const id2 = data.items.find(x => x.product_id !== id1)?.product_id || data.items[1].product_id;
+              setSelected([id1, id2]);
+            }
+          });
+      }, [demoMode, initialId]);
+
+      const toggle = (id) => {
+        if (selected.includes(id)) {
+          if (selected.length > 1) setSelected(selected.filter(x => x !== id));
+        } else {
+          if (selected.length < 4) setSelected([...selected, id]);
+        }
+      };
+
+      const compared = all.filter(p => selected.includes(p.product_id));
+
+      return (
+        <div className="space-y-6">
+          <div className="p-5 rounded-3xl bg-slate-900/60 border border-slate-800">
+            <h4 className="text-sm font-bold text-white mb-1">Select Models to Compare</h4>
+            <div className="flex flex-wrap gap-2 mt-3">
+              {all.map(p => (
+                <button
+                  key={p.product_id}
+                  onClick={() => toggle(p.product_id)}
+                  className={`text-xs px-3 py-1.5 rounded-xl border transition-all ${
+                    selected.includes(p.product_id)
+                      ? 'bg-indigo-600 text-white border-indigo-500'
+                      : 'bg-slate-950 text-slate-400 border-slate-800'
+                  }`}
+                >
+                  {selected.includes(p.product_id) ? '✓ ' : '+ '}{p.name.slice(0, 20)}...
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {compared.map(p => (
+              <div key={p.product_id} className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800 flex flex-col justify-between">
+                <div>
+                  <div className="h-36 rounded-2xl bg-slate-950 flex items-center justify-center p-2 mb-3">
+                    {p.image_url ? <img src={p.image_url} alt="" className="h-full w-full object-contain" /> : <span className="text-4xl">👟</span>}
+                  </div>
+                  <span className="text-[10px] font-bold text-indigo-400 uppercase">{p.brand}</span>
+                  <h4 className="text-xs font-bold text-white line-clamp-2 mt-1">{p.name}</h4>
+                </div>
+                <div className="mt-4 pt-3 border-t border-slate-800 text-xs space-y-1.5">
+                  <div className="flex justify-between"><span className="text-slate-400">Retail:</span><span className="font-semibold text-slate-300">${p.retail_price?.toFixed(2) || 'N/A'}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-400">Market:</span><span className="font-bold text-white">${p.latest_price?.toFixed(2) || 'N/A'}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-400">Premium:</span><span className="font-bold text-emerald-400">{p.resale_premium_pct ? `+${p.resale_premium_pct}%` : 'N/A'}</span></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // -----------------------------------------------------------------------
+    // PAGE 5: PRICE TRENDS VIEW
+    // -----------------------------------------------------------------------
+    function PriceTrendsView({ demoMode }) {
+      const [trends, setTrends] = useState(null);
+      const chartRef = useRef(null);
+
+      useEffect(() => {
+        fetchApi(`/analytics/price-trends?include_demo=${demoMode}`).then(setTrends);
+      }, [demoMode]);
+
+      useEffect(() => {
+        if (!trends || !chartRef.current) return;
+        const ctx = chartRef.current.getContext('2d');
+        if (window._chartTrendsLong) window._chartTrendsLong.destroy();
+        window._chartTrendsLong = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: trends.daily_trends.map(d => d.date),
+            datasets: [
+              {
+                label: 'Daily Mean ($)',
+                data: trends.daily_trends.map(d => d.mean_price),
+                borderColor: '#6366f1',
+                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                tension: 0.2,
+              },
+              {
+                label: 'Daily Median ($)',
+                data: trends.daily_trends.map(d => d.median_price),
+                borderColor: '#a855f7',
+                borderDash: [5, 5],
+                tension: 0.2,
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: { grid: { color: '#1e293b' }, ticks: { color: '#64748b' } },
+              y: { grid: { color: '#1e293b' }, ticks: { color: '#64748b', callback: v => `$${v}` } }
+            }
+          }
+        });
+      }, [trends]);
+
+      if (!trends) return <div className="text-center py-20 text-slate-400">Loading price trend regression...</div>;
+
+      const r = trends.regression;
+
+      return (
+        <div className="space-y-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800">
+              <span className="text-[10px] uppercase font-bold text-slate-400">Direction</span>
+              <p className="text-xl font-bold text-white mt-1 capitalize">{trends.direction}</p>
+            </div>
+            <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800">
+              <span className="text-[10px] uppercase font-bold text-slate-400">Slope (β)</span>
+              <p className="text-xl font-bold text-indigo-400 mt-1">{r?.slope !== null ? `$${r.slope.toFixed(2)}/d` : 'N/A'}</p>
+            </div>
+            <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800">
+              <span className="text-[10px] uppercase font-bold text-slate-400">R-Squared</span>
+              <p className="text-xl font-bold text-violet-400 mt-1">{r?.r_squared !== null ? r.r_squared.toFixed(4) : 'N/A'}</p>
+            </div>
+            <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800">
+              <span className="text-[10px] uppercase font-bold text-slate-400">p-value</span>
+              <p className="text-xl font-bold text-emerald-400 mt-1">{r?.p_value !== null ? r.p_value.toFixed(4) : 'N/A'}</p>
+            </div>
+          </div>
+
+          <div className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800">
+            <h4 className="text-sm font-bold text-white mb-4">Longitudinal Daily Time Series</h4>
+            <div className="h-72 relative"><canvas ref={chartRef}></canvas></div>
+          </div>
+        </div>
+      );
+    }
+
+    // -----------------------------------------------------------------------
+    // PAGE 6: BRAND ANALYTICS VIEW
+    // -----------------------------------------------------------------------
+    function BrandAnalyticsView({ demoMode }) {
+      const [brands, setBrands] = useState([]);
+
+      useEffect(() => {
+        fetchApi(`/analytics/brands?include_demo=${demoMode}`).then(res => setBrands(res.brands));
+      }, [demoMode]);
+
+      return (
+        <div className="space-y-6">
+          <div className="overflow-hidden rounded-3xl border border-slate-800 bg-slate-900/60">
+            <div className="p-5 border-b border-slate-800">
+              <h3 className="text-sm font-bold text-white">Brand-Wise Cross-Sectional Statistics</h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs text-slate-300">
+                <thead className="border-b border-slate-800 text-slate-400 uppercase tracking-wider">
+                  <tr>
+                    <th className="px-5 py-3">Brand</th>
+                    <th className="px-5 py-3">Count</th>
+                    <th className="px-5 py-3">Mean ($)</th>
+                    <th className="px-5 py-3">Median ($)</th>
+                    <th className="px-5 py-3">IQR ($)</th>
+                    <th className="px-5 py-3">Std Dev ($)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/60 font-mono">
+                  {brands.map(b => (
+                    <tr key={b.brand} className="hover:bg-slate-800/30">
+                      <td className="px-5 py-3 font-sans font-bold text-white">{b.brand}</td>
+                      <td className="px-5 py-3 text-indigo-400">{b.count}</td>
+                      <td className="px-5 py-3 font-bold text-white">${b.mean_price?.toFixed(2) || 'N/A'}</td>
+                      <td className="px-5 py-3 text-slate-300">${b.median_price?.toFixed(2) || 'N/A'}</td>
+                      <td className="px-5 py-3 text-sky-400">${b.iqr?.toFixed(2) || 'N/A'}</td>
+                      <td className="px-5 py-3 text-slate-400">${b.std_dev?.toFixed(2) || 'N/A'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // -----------------------------------------------------------------------
+    // PAGE 7: STATISTICAL ANALYSIS VIEW (FDS HYPOTHESES)
+    // -----------------------------------------------------------------------
+    function StatisticalAnalysisView({ demoMode }) {
+      const [anova, setAnova] = useState(null);
+      const [corr, setCorr] = useState(null);
+      const [alpha, setAlpha] = useState(0.05);
+      const [loading, setLoading] = useState(true);
+
+      const chartScatterTrendRef = useRef(null);
+      const chartPriceDistRef = useRef(null);
+      const chartBrandCompRef = useRef(null);
+
+      useEffect(() => {
+        setLoading(true);
+        Promise.all([
+          fetchApi(`/statistics/anova?alpha=${alpha}&include_demo=${demoMode}`),
+          fetchApi(`/statistics/correlation?alpha=${alpha}&include_demo=${demoMode}`)
+        ]).then(([a, c]) => {
+          setAnova(a);
+          setCorr(c);
+          setLoading(false);
+        }).catch(() => setLoading(false));
+      }, [alpha, demoMode]);
+
+      useEffect(() => {
+        if (!corr) return;
+
+        const h2 = corr.price_trend_hypothesis;
+        const scatterPoints = h2 && h2.scatter_points ? h2.scatter_points : [];
+        const priceDist = corr.price_distribution;
+        const brandComp = corr.brand_comparison || [];
+
+        // 1. Scatter Plot with OLS Regression Trend Line
+        if (chartScatterTrendRef.current && scatterPoints.length > 0) {
+          const ctx = chartScatterTrendRef.current.getContext('2d');
+          if (window._chartScatterTrend) window._chartScatterTrend.destroy();
+
+          const scatterData = scatterPoints.map(p => ({ x: p.days_elapsed, y: p.price, name: p.product_name, date: p.date, brand: p.brand }));
+          const trendData = scatterPoints
+            .filter(p => p.fitted_price !== null)
+            .map(p => ({ x: p.days_elapsed, y: p.fitted_price }));
+
+          window._chartScatterTrend = new Chart(ctx, {
+            type: 'scatter',
+            data: {
+              datasets: [
+                {
+                  label: 'Sneaker Observation',
+                  data: scatterData,
+                  backgroundColor: '#38bdf8',
+                  borderColor: '#0284c7',
+                  pointRadius: 5,
+                  pointHoverRadius: 7,
+                },
+                {
+                  label: 'OLS Fitted Trend Line',
+                  data: trendData,
+                  type: 'line',
+                  borderColor: '#818cf8',
+                  borderWidth: 3,
+                  pointRadius: 0,
+                  fill: false,
+                  tension: 0,
+                }
+              ]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { labels: { color: '#cbd5e1', font: { size: 11 } } },
+                tooltip: {
+                  callbacks: {
+                    label: function(context) {
+                      const raw = context.raw;
+                      if (context.datasetIndex === 0) {
+                        return `${raw.name || 'Sneaker'} (${raw.brand || ''}): $${raw.y} [Day ${raw.x}, ${raw.date || ''}]`;
+                      }
+                      return `OLS Trend: $${raw.y.toFixed(2)} [Day ${raw.x}]`;
+                    }
+                  }
+                }
+              },
+              scales: {
+                x: {
+                  title: { display: true, text: 'Elapsed Collection Days', color: '#94a3b8', font: { size: 10 } },
+                  grid: { color: '#1e293b' },
+                  ticks: { color: '#64748b', font: { size: 9 } }
+                },
+                y: {
+                  title: { display: true, text: 'Market Price ($USD)', color: '#94a3b8', font: { size: 10 } },
+                  grid: { color: '#1e293b' },
+                  ticks: { color: '#64748b', callback: v => `$${v}`, font: { size: 10 } }
+                }
+              }
+            }
+          });
+        }
+
+        // 2. Price Distribution Histogram
+        if (chartPriceDistRef.current && priceDist && priceDist.bins && priceDist.bins.length > 0) {
+          const ctx = chartPriceDistRef.current.getContext('2d');
+          if (window._chartPriceDist) window._chartPriceDist.destroy();
+
+          window._chartPriceDist = new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels: priceDist.bins.map(b => b.bin_label),
+              datasets: [{
+                label: 'Sneaker Count',
+                data: priceDist.bins.map(b => b.count),
+                backgroundColor: '#6366f1',
+                borderRadius: 6,
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: {
+                x: { grid: { color: '#1e293b' }, ticks: { color: '#64748b', font: { size: 9 } } },
+                y: { grid: { color: '#1e293b' }, ticks: { color: '#64748b', stepSize: 1, font: { size: 10 } } }
+              }
+            }
+          });
+        }
+
+        // 3. Brand Comparison Bar Chart (Mean vs Median)
+        if (chartBrandCompRef.current && brandComp.length > 0) {
+          const ctx = chartBrandCompRef.current.getContext('2d');
+          if (window._chartBrandComp) window._chartBrandComp.destroy();
+
+          window._chartBrandComp = new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels: brandComp.map(b => b.brand),
+              datasets: [
+                {
+                  label: 'Mean Price ($)',
+                  data: brandComp.map(b => b.mean_price),
+                  backgroundColor: '#818cf8',
+                  borderRadius: 4,
+                },
+                {
+                  label: 'Median Price ($)',
+                  data: brandComp.map(b => b.median_price),
+                  backgroundColor: '#38bdf8',
+                  borderRadius: 4,
+                }
+              ]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { labels: { color: '#cbd5e1', font: { size: 11 } } } },
+              scales: {
+                x: { grid: { color: '#1e293b' }, ticks: { color: '#64748b', font: { size: 9 } } },
+                y: { grid: { color: '#1e293b' }, ticks: { color: '#64748b', callback: v => `$${v}`, font: { size: 10 } } }
+              }
+            }
+          });
+        }
+      }, [corr, anova]);
+
+      if (loading) return <div className="text-center py-20 text-slate-400">Executing SciPy hypothesis tests...</div>;
+      if (!anova || !corr) return <div className="text-center py-20 text-slate-400">Unable to load statistical tests.</div>;
+
+      const h1 = anova;
+      const h2 = corr.price_trend_hypothesis;
+      const h3 = corr.price_rating_hypothesis;
+      const boxplots = h1.brand_boxplots || [];
+
+      // Global price bounds for visual box plot track
+      const allPrices = boxplots.flatMap(b => [b.min_whisker, b.max_whisker]);
+      const minScale = allPrices.length > 0 ? Math.max(0, Math.floor(Math.min(...allPrices) / 20) * 20 - 20) : 0;
+      const maxScale = allPrices.length > 0 ? Math.ceil(Math.max(...allPrices) / 20) * 20 + 20 : 300;
+      const scaleRange = maxScale - minScale || 1;
+
+      return (
+        <div className="space-y-8 pb-12">
+          {/* Header Banner */}
+          <div className="p-6 rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-indigo-500/20 shadow-2xl">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-indigo-400 uppercase tracking-wider px-2.5 py-1 rounded-md bg-indigo-500/10 border border-indigo-500/30">
+                    Fundamentals of Data Science (FDS)
+                  </span>
+                  <span className="text-xs font-bold text-sky-400 uppercase tracking-wider px-2.5 py-1 rounded-md bg-sky-500/10 border border-sky-500/30">
+                    Hypothesis Engine
+                  </span>
+                </div>
+                <h3 className="text-2xl font-black text-white mt-2">Formal Statistical Analysis & Hypothesis Testing</h3>
+                <p className="text-xs text-slate-400 mt-1 max-w-2xl">
+                  Evaluated with live SciPy models. All tests adhere strictly to falsificationism:
+                  failing to reject H₀ indicates lack of statistical evidence, never that H₀ is proven true.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3 bg-slate-950/80 border border-slate-800 p-3 rounded-2xl">
+                <span className="text-xs font-semibold text-slate-300">Significance Level (α):</span>
+                <select
+                  value={alpha}
+                  onChange={e => setAlpha(Number(e.target.value))}
+                  className="bg-slate-900 border border-slate-700 text-indigo-400 text-xs font-bold rounded-xl px-3 py-1.5 focus:outline-none"
+                >
+                  <option value={0.01}>α = 0.01 (99% CI)</option>
+                  <option value={0.05}>α = 0.05 (95% CI)</option>
+                  <option value={0.10}>α = 0.10 (90% CI)</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Decision Rule Notice */}
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 bg-slate-950/60 border border-slate-800/80 rounded-2xl text-xs">
+              <div>
+                <span className="font-bold text-slate-400">Decision Rule:</span>
+                <p className="text-slate-300 mt-0.5"><span className="text-emerald-400 font-mono">p &lt; α</span> → Reject H₀ | <span className="text-amber-400 font-mono">p ≥ α</span> → Fail to reject H₀</p>
+              </div>
+              <div>
+                <span className="font-bold text-slate-400">Non-Dogmatic Mandate:</span>
+                <p className="text-slate-300 mt-0.5 italic">H₀ is never stated as proven true.</p>
+              </div>
+              <div>
+                <span className="font-bold text-slate-400">Current Threshold:</span>
+                <p className="text-indigo-400 font-mono font-bold mt-0.5">α = {alpha}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* HYPOTHESIS 1: BRAND VS PRICE */}
+          <div className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800 space-y-5 shadow-xl">
+            <div className="flex flex-wrap justify-between items-center gap-3 border-b border-slate-800 pb-3">
+              <div>
+                <span className="text-[11px] font-bold text-indigo-400 uppercase tracking-wider">FDS Hypothesis 1</span>
+                <h4 className="text-lg font-bold text-white mt-0.5">Brand Influence on Sneaker Market Price (One-Way ANOVA)</h4>
+                <p className="text-xs text-slate-400">Scientific Question: Does brand prestige produce statistically significant mean price differences?</p>
+              </div>
+              <span className={`text-xs font-black px-4 py-1.5 rounded-full border ${h1.decision === 'Reject H0' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : h1.decision === 'Fail to reject H0' ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' : 'bg-slate-800 text-slate-400 border-slate-700'}`}>
+                Decision: {h1.decision}
+              </span>
+            </div>
+
+            {/* Hypotheses H0 and H1 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+              <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800">
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">Null Hypothesis (H₀)</span>
+                <p className="text-slate-200 mt-1">{h1.null_hypothesis}</p>
+                <p className="text-[10px] text-slate-400 font-mono mt-1">μ₁ = μ₂ = ... = μₖ (Brand has zero systematic price effect)</p>
+              </div>
+              <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800">
+                <span className="text-[10px] uppercase font-bold text-indigo-400 block">Alternative Hypothesis (H₁)</span>
+                <p className="text-slate-200 mt-1">{h1.alternative_hypothesis}</p>
+                <p className="text-[10px] text-indigo-400/80 font-mono mt-1">∃ i, j : μᵢ ≠ μⱼ (At least one brand differs significantly)</p>
+              </div>
+            </div>
+
+            {/* Metrics */}
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs font-mono">
+              <div className="p-3 bg-slate-950 rounded-xl border border-slate-800"><span className="text-slate-400 block text-[10px]">TEST</span><span className="text-white font-bold">{h1.test_type}</span></div>
+              <div className="p-3 bg-slate-950 rounded-xl border border-slate-800"><span className="text-slate-400 block text-[10px]">ALPHA (α)</span><span className="text-indigo-400 font-bold">{h1.alpha}</span></div>
+              <div className="p-3 bg-slate-950 rounded-xl border border-slate-800"><span className="text-slate-400 block text-[10px]">F-STATISTIC</span><span className="text-white font-bold">{h1.f_statistic ? h1.f_statistic.toFixed(4) : 'N/A'}</span></div>
+              <div className="p-3 bg-slate-950 rounded-xl border border-slate-800"><span className="text-slate-400 block text-[10px]">p-VALUE</span><span className="text-sky-400 font-bold">{h1.p_value !== null ? (h1.p_value < 0.0001 ? '< 0.0001' : h1.p_value.toFixed(6)) : 'N/A'}</span></div>
+              <div className="p-3 bg-slate-950 rounded-xl border border-slate-800"><span className="text-slate-400 block text-[10px]">BRANDS EVALUATED</span><span className="text-emerald-400 font-bold">{h1.brands_evaluated.length}</span></div>
+            </div>
+
+            {/* Explanations */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 text-xs">
+              <div className="p-3.5 bg-slate-950 rounded-xl border border-slate-800">
+                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Scientific Conclusion</span>
+                <p className="text-slate-300 leading-relaxed">{h1.interpretation}</p>
+              </div>
+              <div className="p-3.5 bg-indigo-950/20 rounded-xl border border-indigo-500/30">
+                <span className="text-[10px] uppercase font-bold text-indigo-400 block mb-1">2nd-Year Engineering Analogy: Op-Amp Signal-to-Noise Ratio (SNR)</span>
+                <p className="text-indigo-200/90 leading-relaxed">
+                  {h1.engineering_explanation || "Think of One-Way ANOVA as calculating the Signal-to-Noise Ratio in an operational amplifier. The 'Signal' is the variance between brand means (brand pricing power). The 'Noise' is the random variance within each brand. When F is large and p < 0.05, the brand signal significantly exceeds random noise."}
+                </p>
+              </div>
+            </div>
+
+            {/* CHART 1: BRAND BOX PLOT TRACKS */}
+            <div className="p-4 bg-slate-950/70 rounded-2xl border border-slate-800/80 space-y-4">
+              <div className="flex flex-wrap justify-between items-center border-b border-slate-800 pb-2">
+                <h5 className="text-xs font-bold text-white flex items-center gap-2">
+                  <span>📊</span> Brand Price Distribution Box Plot (Five-Number Summary)
+                </h5>
+                <div className="flex items-center gap-3 text-[10px] text-slate-400">
+                  <span className="flex items-center gap-1"><span className="h-2 w-4 bg-indigo-600/50 border border-indigo-400 rounded-sm"></span> IQR (Q₁ to Q₃)</span>
+                  <span className="flex items-center gap-1"><span className="h-3 w-0.5 bg-white"></span> Median</span>
+                  <span className="flex items-center gap-1"><span className="h-2 w-2 bg-amber-400 rounded-full"></span> Mean (♦)</span>
+                </div>
+              </div>
+
+              {boxplots.length === 0 ? (
+                <p className="text-xs text-slate-500 py-4 text-center">Insufficient brand data to render box plots.</p>
+              ) : (
+                <div className="space-y-4 pt-1">
+                  {boxplots.map(bp => {
+                    const leftWhisker = Math.max(0, ((bp.min_whisker - minScale) / scaleRange) * 100);
+                    const rightWhisker = Math.min(100, ((bp.max_whisker - minScale) / scaleRange) * 100);
+                    const q1 = Math.max(0, ((bp.q1 - minScale) / scaleRange) * 100);
+                    const q3 = Math.min(100, ((bp.q3 - minScale) / scaleRange) * 100);
+                    const median = Math.max(0, ((bp.median - minScale) / scaleRange) * 100);
+                    const mean = Math.max(0, ((bp.mean - minScale) / scaleRange) * 100);
+                    const boxW = Math.max(1, q3 - q1);
+
+                    return (
+                      <div key={bp.brand} className="space-y-1">
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="font-bold text-white font-mono">[{bp.brand}] <span className="text-slate-400 text-[10px] font-normal">n={bp.sample_size}</span></span>
+                          <span className="font-mono text-[10px] text-slate-300">Min: ${bp.min_whisker} | Q₁: ${bp.q1} | <strong className="text-white">Med: ${bp.median}</strong> | Q₃: ${bp.q3} | Max: ${bp.max_whisker} | <strong className="text-amber-400">Mean: ${bp.mean}</strong></span>
+                        </div>
+                        <div className="relative h-7 w-full bg-slate-900 border border-slate-800 rounded-lg px-2 flex items-center">
+                          {/* Whisker Line */}
+                          <div className="absolute h-0.5 bg-slate-600" style={{ left: `${leftWhisker}%`, width: `${Math.max(1, rightWhisker - leftWhisker)}%` }}></div>
+                          {/* Min End */}
+                          <div className="absolute h-3 w-0.5 bg-slate-400" style={{ left: `${leftWhisker}%`, transform: 'translateX(-50%)' }}></div>
+                          {/* Max End */}
+                          <div className="absolute h-3 w-0.5 bg-slate-400" style={{ left: `${rightWhisker}%`, transform: 'translateX(-50%)' }}></div>
+                          {/* IQR Box */}
+                          <div className="absolute h-5 bg-indigo-600/40 border border-indigo-400 rounded-sm" style={{ left: `${q1}%`, width: `${boxW}%` }}></div>
+                          {/* Median Line */}
+                          <div className="absolute h-5 w-1 bg-white rounded-full z-10" style={{ left: `${median}%`, transform: 'translateX(-50%)' }}></div>
+                          {/* Mean Dot */}
+                          <div className="absolute h-2.5 w-2.5 rotate-45 bg-amber-400 border border-amber-200 z-10" style={{ left: `${mean}%`, transform: 'translateX(-50%)' }}></div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <div className="flex justify-between text-[10px] font-mono text-slate-500 pt-1 border-t border-slate-800">
+                    <span>${minScale}</span>
+                    <span>${Math.round(minScale + scaleRange * 0.5)}</span>
+                    <span>${maxScale}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* HYPOTHESIS 2: PRICE TREND OVER TIME */}
+          <div className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800 space-y-5 shadow-xl">
+            <div className="flex flex-wrap justify-between items-center gap-3 border-b border-slate-800 pb-3">
+              <div>
+                <span className="text-[11px] font-bold text-indigo-400 uppercase tracking-wider">FDS Hypothesis 2</span>
+                <h4 className="text-lg font-bold text-white mt-0.5">Price Trend Sensitivity to Collection Date (OLS Regression)</h4>
+                <p className="text-xs text-slate-400">Scientific Question: Does market price drift predictably over time or remain stationary?</p>
+              </div>
+              <span className={`text-xs font-black px-4 py-1.5 rounded-full border ${h2.decision === 'Reject H0' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : h2.decision === 'Fail to reject H0' ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' : 'bg-slate-800 text-slate-400 border-slate-700'}`}>
+                Decision: {h2.decision}
+              </span>
+            </div>
+
+            {/* Hypotheses H0 and H1 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+              <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800">
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">Null Hypothesis (H₀)</span>
+                <p className="text-slate-200 mt-1">{h2.null_hypothesis}</p>
+                <p className="text-[10px] text-slate-400 font-mono mt-1">β = 0 (Slope is zero; price changes are random fluctuations)</p>
+              </div>
+              <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800">
+                <span className="text-[10px] uppercase font-bold text-indigo-400 block">Alternative Hypothesis (H₁)</span>
+                <p className="text-slate-200 mt-1">{h2.alternative_hypothesis}</p>
+                <p className="text-[10px] text-indigo-400/80 font-mono mt-1">β ≠ 0 (Non-zero slope; systematic market appreciation or depreciation)</p>
+              </div>
+            </div>
+
+            {/* Metrics */}
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs font-mono">
+              <div className="p-3 bg-slate-950 rounded-xl border border-slate-800"><span className="text-slate-400 block text-[10px]">TEST</span><span className="text-white font-bold">OLS Regression</span></div>
+              <div className="p-3 bg-slate-950 rounded-xl border border-slate-800"><span className="text-slate-400 block text-[10px]">SLOPE (β)</span><span className="text-indigo-400 font-bold">{h2.coefficient !== null ? `$${h2.coefficient.toFixed(4)}/d` : 'N/A'}</span></div>
+              <div className="p-3 bg-slate-950 rounded-xl border border-slate-800"><span className="text-slate-400 block text-[10px]">PEARSON r</span><span className="text-white font-bold">{h2.pearson_r !== null ? h2.pearson_r.toFixed(4) : 'N/A'}</span></div>
+              <div className="p-3 bg-slate-950 rounded-xl border border-slate-800"><span className="text-slate-400 block text-[10px]">p-VALUE</span><span className="text-sky-400 font-bold">{h2.p_value !== null ? h2.p_value.toFixed(4) : 'N/A'}</span></div>
+              <div className="p-3 bg-slate-950 rounded-xl border border-slate-800"><span className="text-slate-400 block text-[10px]">SAMPLE SIZE</span><span className="text-emerald-400 font-bold">{h2.sample_size}</span></div>
+            </div>
+
+            {/* Explanations */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 text-xs">
+              <div className="p-3.5 bg-slate-950 rounded-xl border border-slate-800">
+                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Scientific Conclusion</span>
+                <p className="text-slate-300 leading-relaxed">{h2.interpretation}</p>
+              </div>
+              <div className="p-3.5 bg-indigo-950/20 rounded-xl border border-indigo-500/30">
+                <span className="text-[10px] uppercase font-bold text-indigo-400 block mb-1">2nd-Year Engineering Analogy: Kinematics & Velocity (dy/dt)</span>
+                <p className="text-indigo-200/90 leading-relaxed">
+                  {h2.engineering_explanation || "In physical dynamics, the regression slope (beta) represents price velocity dy/dt (dollars per day). If beta is close to 0 and p >= 0.05, the market is in steady-state equilibrium (stationary pricing with low-amplitude thermal jitter). If p < 0.05 and beta > 0, the market has positive momentum (appreciation); beta < 0 indicates market depreciation."}
+                </p>
+              </div>
+            </div>
+
+            {/* CHART 2 & 3: SCATTER PLOT WITH REGRESSION TREND LINE */}
+            <div className="p-4 bg-slate-950/70 rounded-2xl border border-slate-800/80 space-y-2">
+              <div className="flex justify-between items-center border-b border-slate-800 pb-2">
+                <h5 className="text-xs font-bold text-white flex items-center gap-2">
+                  <span>📈</span> Scatter Plot & OLS Fitted Regression Line
+                </h5>
+                <span className="text-[10px] font-mono text-slate-400">R² = {h2.r_squared !== null && h2.r_squared !== undefined ? h2.r_squared.toFixed(4) : 'N/A'}</span>
+              </div>
+              <div className="h-64 relative">
+                <canvas ref={chartScatterTrendRef}></canvas>
+              </div>
+            </div>
+          </div>
+
+          {/* HYPOTHESIS 3: PRICE VS RATING */}
+          <div className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800 space-y-5 shadow-xl">
+            <div className="flex flex-wrap justify-between items-center gap-3 border-b border-slate-800 pb-3">
+              <div>
+                <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wider">FDS Hypothesis 3</span>
+                <h4 className="text-lg font-bold text-white mt-0.5">Correlation Between Sneaker Price and Product Rating</h4>
+                <p className="text-xs text-slate-400">Scientific Question: Does market price exhibit a statistically significant correlation with consumer review rating?</p>
+              </div>
+              <span className="text-xs font-black px-4 py-1.5 rounded-full border bg-amber-500/10 text-amber-400 border-amber-500/30">
+                Status: {h3.message}
+              </span>
+            </div>
+
+            {/* Hypotheses H0 and H1 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+              <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800">
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">Null Hypothesis (H₀)</span>
+                <p className="text-slate-200 mt-1">{h3.null_hypothesis || 'There is no linear correlation between sneaker price and consumer rating (rho = 0).'}</p>
+                <p className="text-[10px] text-slate-400 font-mono mt-1">ρ = 0 (Zero linear correlation)</p>
+              </div>
+              <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800">
+                <span className="text-[10px] uppercase font-bold text-indigo-400 block">Alternative Hypothesis (H₁)</span>
+                <p className="text-slate-200 mt-1">{h3.alternative_hypothesis || 'There is a statistically significant linear correlation between sneaker price and consumer rating (rho != 0).'}</p>
+                <p className="text-[10px] text-indigo-400/80 font-mono mt-1">ρ ≠ 0 (Statistically significant correlation exists)</p>
+              </div>
+            </div>
+
+            {/* Metrics */}
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs font-mono">
+              <div className="p-3 bg-slate-950 rounded-xl border border-slate-800"><span className="text-slate-400 block text-[10px]">TEST</span><span className="text-white font-bold">Pearson Correlation</span></div>
+              <div className="p-3 bg-slate-950 rounded-xl border border-slate-800"><span className="text-slate-400 block text-[10px]">ALPHA (α)</span><span className="text-indigo-400 font-bold">{h3.alpha || 0.05}</span></div>
+              <div className="p-3 bg-slate-950 rounded-xl border border-slate-800"><span className="text-slate-400 block text-[10px]">PEARSON r</span><span className="text-slate-400 font-bold">{h3.correlation !== null ? h3.correlation.toFixed(4) : 'N/A (No Sensor)'}</span></div>
+              <div className="p-3 bg-slate-950 rounded-xl border border-slate-800"><span className="text-slate-400 block text-[10px]">p-VALUE</span><span className="text-slate-400 font-bold">{h3.p_value !== null ? h3.p_value.toFixed(4) : 'N/A'}</span></div>
+              <div className="p-3 bg-slate-950 rounded-xl border border-slate-800"><span className="text-slate-400 block text-[10px]">DECISION</span><span className="text-amber-400 font-bold">{h3.decision}</span></div>
+            </div>
+
+            {/* Explanations */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 text-xs">
+              <div className="p-4 bg-amber-950/15 rounded-xl border border-amber-500/20 text-amber-200">
+                <h5 className="font-bold flex items-center gap-2 mb-1"><span>⚠️</span> Academic FDS Data Integrity Policy</h5>
+                <p className="text-amber-300 font-mono leading-relaxed">&ldquo;{h3.interpretation}&rdquo;</p>
+                <p className="text-[10px] text-amber-400/80 mt-2">The public SoleScout API indexes live retailer pricing, in-stock US sizes, and store availability; it does not collect user subjective review ratings. Per FDS rules, artificial ratings are never synthesized.</p>
+              </div>
+              <div className="p-4 bg-indigo-950/20 rounded-xl border border-indigo-500/30 text-indigo-200">
+                <h5 className="font-bold flex items-center gap-2 mb-1"><span>⚡</span> 2nd-Year Engineering Analogy: Telemetry Sensor Circuit</h5>
+                <p className="text-indigo-200/90 leading-relaxed">
+                  {h3.engineering_explanation || "In electrical measurement, you cannot report impedance or current without connecting an ammeter to the circuit. Attempting to correlate price with missing review telemetry would require fabricating synthetic data, which directly violates engineering ethics. In professional systems, reporting 'Sensor Telemetry Absent' is the correct, rigorous engineering response."}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* CHARTS 4 & 5: PRICE DISTRIBUTION & BRAND COMPARISON */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800 space-y-3">
+              <div className="border-b border-slate-800 pb-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-400">Distribution Analysis</span>
+                <h4 className="text-sm font-bold text-white mt-0.5">Sneaker Market Price Distribution (Histogram)</h4>
+                <p className="text-xs text-slate-400">Frequency density across price intervals</p>
+              </div>
+              <div className="h-64 relative">
+                <canvas ref={chartPriceDistRef}></canvas>
+              </div>
+            </div>
+
+            <div className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800 space-y-3">
+              <div className="border-b border-slate-800 pb-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-sky-400">Comparative Analysis</span>
+                <h4 className="text-sm font-bold text-white mt-0.5">Brand Price Comparison (Mean vs. Median)</h4>
+                <p className="text-xs text-slate-400">Cross-sectional ANOVA central tendency breakdown</p>
+              </div>
+              <div className="h-64 relative">
+                <canvas ref={chartBrandCompRef}></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // -----------------------------------------------------------------------
+    // PAGE 8: DATA QUALITY VIEW
+    // -----------------------------------------------------------------------
+    function DataQualityView() {
+      const [quality, setQuality] = useState(null);
+      const [running, setRunning] = useState(false);
+      const [runResult, setRunResult] = useState(null);
+
+      const loadQuality = () => fetchApi('/data-quality').then(setQuality);
+
+      useEffect(() => { loadQuality(); }, []);
+
+      const handleRun = async (demo) => {
+        setRunning(true); setRunResult(null);
+        try {
+          const res = await fetch('/api/collector/run', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ demo, queries: 'Jordan,Nike,Adidas', limit: 5 }),
+          });
+          const data = await res.json();
+          setRunResult(data);
+          await loadQuality();
+        } catch(e) { setRunResult({ status: 'error', message: String(e) }); }
+        finally { setRunning(false); }
+      };
+
+      if (!quality) return <div className="text-center py-20 text-slate-400">Loading data cleaning audit...</div>;
+
+      const m = quality.metrics;
+      const pipeline = quality.pipeline_stages || [];
+      const removed = quality.removed_records || [];
+      const rawCsv = quality.raw_csv_available;
+      const cleanCsv = quality.cleaned_csv_available;
+
+      const pipelineColors = ['#3b82f6','#f59e0b','#f97316','#a855f7','#10b981','#06b6d4','#6366f1'];
+
+      return (
+        <div className="space-y-6">
+          {/* Header + actions */}
+          <div className="p-5 bg-slate-900/60 border border-slate-800 rounded-3xl">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <h3 className="text-base font-bold text-white">Data Quality &amp; ETL Pipeline</h3>
+                <p className="text-xs text-slate-400 mt-0.5">Stage 4 — Reproducible cleaning audit. Missing fields stored as NULL, never imputed.</p>
+                {quality.report_date && <p className="text-[10px] font-mono text-slate-500 mt-1">Report: {new Date(quality.report_date).toLocaleString()}</p>}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {rawCsv
+                  ? <a href="/api/download/raw-csv" download className="px-3 py-1.5 text-xs font-bold rounded-xl border border-slate-600 bg-slate-800 text-slate-200 hover:bg-slate-700">⬇ Raw CSV</a>
+                  : <span className="px-3 py-1.5 text-xs rounded-xl border border-slate-800 text-slate-600">⬇ Raw CSV</span>}
+                {cleanCsv
+                  ? <a href="/api/download/cleaned-csv" download className="px-3 py-1.5 text-xs font-bold rounded-xl border border-emerald-700/50 bg-emerald-950/30 text-emerald-300 hover:bg-emerald-900/40">⬇ Cleaned CSV</a>
+                  : <span className="px-3 py-1.5 text-xs rounded-xl border border-slate-800 text-slate-600">⬇ Cleaned CSV</span>}
+                <button onClick={() => handleRun(false)} disabled={running}
+                  className="px-3 py-1.5 text-xs font-bold rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-50">
+                  {running ? 'Running…' : '▶ Live Collector'}
+                </button>
+                <button onClick={() => handleRun(true)} disabled={running}
+                  className="px-3 py-1.5 text-xs font-bold rounded-xl border border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700 disabled:opacity-50">
+                  Seed Demo
+                </button>
+              </div>
+            </div>
+            {runResult && (
+              <div className={`mt-3 p-3 rounded-xl text-xs font-mono ${runResult.status === 'success' ? 'bg-emerald-950/30 text-emerald-300 border border-emerald-700/40' : 'bg-amber-950/30 text-amber-300 border border-amber-700/40'}`}>
+                [{runResult.status}] {runResult.message} {runResult.snapshots_inserted != null ? `| Inserted: ${runResult.snapshots_inserted}` : ''}
+              </div>
+            )}
+          </div>
+
+          {/* Pipeline flow */}
+          <div className="p-5 bg-slate-900/60 border border-slate-800 rounded-3xl">
+            <h4 className="text-sm font-bold text-white mb-4">FDS Data Pipeline</h4>
+            <div className="flex flex-col gap-0">
+              {pipeline.map((s, i) => (
+                <div key={s.stage_number}>
+                  <div className="rounded-2xl border p-3.5 flex items-start gap-3" style={{ borderColor: pipelineColors[i] + '44', background: pipelineColors[i] + '11' }}>
+                    <span className="text-xl leading-none">{s.icon}</span>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[9px] font-bold text-slate-500 uppercase">Stage {s.stage_number}</span>
+                        <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full" style={{ background: pipelineColors[i] + '33', color: pipelineColors[i] }}>{s.status}</span>
+                      </div>
+                      <p className="text-sm font-bold text-white">{s.name}</p>
+                      <p className="text-xs text-slate-400 mt-0.5">{s.description}</p>
+                      <div className="flex gap-2 mt-1.5 text-[9px] font-mono flex-wrap">
+                        <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">IN: {s.input_type}</span>
+                        <span className="text-slate-600">→</span>
+                        <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300">OUT: {s.output_type}</span>
+                        {s.details && <span className="text-slate-500 italic">{s.details}</span>}
+                      </div>
+                    </div>
+                  </div>
+                  {i < pipeline.length - 1 && (
+                    <div className="flex justify-center py-1">
+                      <div className="text-slate-600 text-xs">▼</div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* KPI cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {[
+              { label: 'Raw Records', val: m.raw_records, color: 'text-blue-400' },
+              { label: 'Clean Retained', val: m.clean_records, color: 'text-emerald-400' },
+              { label: 'Duplicates Purged', val: m.duplicate_records, color: 'text-amber-400' },
+              { label: 'Invalid Prices', val: m.invalid_prices, color: 'text-red-400' },
+              { label: 'Invalid Timestamps', val: m.invalid_timestamps, color: 'text-red-400' },
+              { label: 'Records Removed', val: m.records_removed, color: 'text-orange-400' },
+              { label: 'Cleaning Efficiency', val: m.cleaning_percentage.toFixed(1) + '%', color: 'text-purple-400' },
+              { label: 'Outlier Policy', val: 'Flag Only', color: 'text-cyan-400' },
+            ].map(card => (
+              <div key={card.label} className="p-4 bg-slate-900/60 border border-slate-800 rounded-2xl">
+                <span className="text-[10px] uppercase font-bold text-slate-400">{card.label}</span>
+                <p className={`text-xl font-black mt-1 ${card.color}`}>{card.val}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Cleaning flow bar */}
+          <div className="p-5 bg-slate-900/60 border border-slate-800 rounded-3xl">
+            <h4 className="text-sm font-bold text-white mb-3">Cleaning Flow Summary</h4>
+            <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
+              <span>{m.raw_records} raw records</span>
+              <span className="text-emerald-400">{m.clean_records} retained ({m.cleaning_percentage.toFixed(1)}%)</span>
+            </div>
+            <div className="h-5 rounded-full bg-slate-800 overflow-hidden flex">
+              {m.raw_records > 0 && <>
+                <div style={{ width: `${(m.clean_records / m.raw_records) * 100}%` }}
+                  className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 flex items-center justify-center">
+                  {m.clean_records / m.raw_records > 0.2 && <span className="text-[9px] font-bold text-white">Clean</span>}
+                </div>
+                {m.records_removed > 0 && <div style={{ width: `${(m.records_removed / m.raw_records) * 100}%` }}
+                  className="h-full bg-gradient-to-r from-red-800 to-red-600 flex items-center justify-center">
+                  {m.records_removed / m.raw_records > 0.1 && <span className="text-[9px] font-bold text-white">Removed</span>}
+                </div>}
+              </>}
+            </div>
+            <div className="flex gap-4 mt-2 text-[10px] text-slate-500">
+              <span>■ <span className="text-emerald-500">Clean: {m.clean_records}</span></span>
+              <span>■ <span className="text-red-600">Removed: {m.records_removed}</span></span>
+            </div>
+          </div>
+
+          {/* Missing values table */}
+          <div className="bg-slate-900/60 border border-slate-800 rounded-3xl overflow-hidden">
+            <div className="p-5 border-b border-slate-800">
+              <h4 className="text-sm font-bold text-white">Missing Values &amp; Sparsity Audit</h4>
+              <p className="text-xs text-slate-400 mt-0.5">Missing fields preserved as SQL NULL — never artificially fabricated.</p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs text-slate-300">
+                <thead className="border-b border-slate-800 bg-slate-950/70">
+                  <tr>
+                    {['Field','Missing Count','Sparsity %','Treatment'].map(h => (
+                      <th key={h} className="px-5 py-3 text-left text-[10px] uppercase tracking-wider text-slate-400">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/50">
+                  {Object.entries(m.missing_values || {}).length > 0
+                    ? Object.entries(m.missing_values).map(([field, meta]) => (
+                        <tr key={field} className="hover:bg-slate-800/30">
+                          <td className="px-5 py-3 font-mono font-bold text-white">{field}</td>
+                          <td className="px-5 py-3 font-mono">{meta.count}</td>
+                          <td className="px-5 py-3">
+                            <div className="flex items-center gap-2">
+                              <div className="h-2 w-20 bg-slate-800 rounded-full overflow-hidden">
+                                <div className={`h-full ${meta.percentage > 50 ? 'bg-amber-500' : 'bg-indigo-500'}`} style={{ width: `${meta.percentage}%` }} />
+                              </div>
+                              <span className="font-mono text-slate-400">{meta.percentage.toFixed(1)}%</span>
+                            </div>
+                          </td>
+                          <td className="px-5 py-3 text-slate-400">Stored as SQL NULL</td>
+                        </tr>
+                      ))
+                    : <tr><td colSpan={4} className="px-5 py-8 text-center text-slate-500">No sparsity detected. Run cleaning pipeline for full report.</td></tr>}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Records removed table */}
+          <div className="bg-slate-900/60 border border-slate-800 rounded-3xl overflow-hidden">
+            <div className="p-5 border-b border-slate-800 flex items-center justify-between flex-wrap gap-2">
+              <div>
+                <h4 className="text-sm font-bold text-white">Records Removed During Cleaning</h4>
+                <p className="text-[10px] text-slate-400 mt-0.5">
+                  <span className="text-red-400">■ Data Quality Error</span>
+                  <span className="mx-2 text-slate-600">|</span>
+                  <span className="text-yellow-400">■ Duplicate Record</span>
+                </p>
+              </div>
+              <span className="px-2.5 py-1 rounded-full border border-slate-700 bg-slate-800 text-xs font-mono text-slate-400">{removed.length} records</span>
+            </div>
+            <div className="overflow-x-auto">
+              {removed.length > 0 ? (
+                <table className="w-full text-xs text-slate-300">
+                  <thead className="border-b border-slate-800 bg-slate-950/70">
+                    <tr>
+                      {['#','Product ID','Product Name','Raw Price','Error Type','Reason'].map(h => (
+                        <th key={h} className="px-4 py-3 text-left text-[10px] uppercase tracking-wider text-slate-400">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/40">
+                    {removed.map((rec, i) => {
+                      const isDup = rec.category && rec.category.toLowerCase().includes('duplicate');
+                      return (
+                        <tr key={i} className={isDup ? 'hover:bg-yellow-950/20' : 'hover:bg-red-950/20'}>
+                          <td className="px-4 py-3 font-mono text-slate-500">{rec.raw_index ?? i}</td>
+                          <td className="px-4 py-3 font-mono text-slate-400">{rec.product_id ?? <em className="text-slate-600">null</em>}</td>
+                          <td className="px-4 py-3 text-white font-medium max-w-[180px] truncate">{rec.product_name ?? <em className="text-slate-600">null</em>}</td>
+                          <td className="px-4 py-3 font-mono">{rec.raw_price != null ? String(rec.raw_price) : <em className="text-slate-600">null</em>}</td>
+                          <td className="px-4 py-3">
+                            <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase ${isDup ? 'bg-yellow-900/40 text-yellow-300' : 'bg-red-900/40 text-red-300'}`}>
+                              {rec.category ?? 'Data Quality Error'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-slate-400 max-w-[200px]">{rec.reasons}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="px-5 py-10 text-center text-slate-500 text-xs">
+                  {m.records_removed > 0
+                    ? `${m.records_removed} record(s) removed — re-run cleaning pipeline to generate detailed log.`
+                    : 'No records were removed. All ingested records passed quality validation.'}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Download footer */}
+          <div className="p-5 bg-slate-900/60 border border-slate-800 rounded-3xl flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h4 className="text-sm font-bold text-white">Export Datasets</h4>
+              <p className="text-xs text-slate-400 mt-0.5">CSV files contain no API credentials.</p>
+            </div>
+            <div className="flex gap-3 flex-wrap">
+              {rawCsv
+                ? <a href="/api/download/raw-csv" download className="px-4 py-2 text-sm font-bold rounded-xl border border-slate-600 bg-slate-800 text-slate-200 hover:bg-slate-700">⬇ Download Raw CSV</a>
+                : <button disabled className="px-4 py-2 text-sm font-bold rounded-xl border border-slate-800 text-slate-600 cursor-not-allowed">⬇ Download Raw CSV</button>}
+              {cleanCsv
+                ? <a href="/api/download/cleaned-csv" download className="px-4 py-2 text-sm font-bold rounded-xl bg-emerald-700 text-white hover:bg-emerald-600">⬇ Download Cleaned CSV</a>
+                : <button disabled className="px-4 py-2 text-sm font-bold rounded-xl bg-slate-800 text-slate-600 cursor-not-allowed">⬇ Download Cleaned CSV</button>}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // -----------------------------------------------------------------------
+    // PAGE 9: ABOUT VIEW
+    // -----------------------------------------------------------------------
+    function AboutView() {
+      return (
+        <div className="space-y-6 max-w-4xl">
+          <div className="p-8 rounded-3xl bg-slate-900/60 border border-slate-800">
+            <span className="text-xs font-bold text-indigo-400 uppercase">Fundamentals of Data Science (FDS)</span>
+            <h2 className="text-2xl font-black text-white mt-2">SoleScout Sneaker Price Intelligence & Analytics</h2>
+            <p className="text-xs text-slate-300 leading-relaxed mt-3">
+              Full-stack data science platform collecting, cleaning, storing, and analyzing secondary sneaker market pricing. Built for college coursework demonstrating reproducible ETL, rigorous hypothesis testing, and professional full-stack web engineering.
+            </p>
+          </div>
+
+          <div className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800 space-y-3">
+            <h4 className="text-sm font-bold text-white">Full-Stack Data Flow Architecture</h4>
+            <div className="p-4 bg-slate-950 rounded-2xl border border-slate-800 font-mono text-xs text-indigo-300 leading-loose">
+              SoleScout API → Python Collector → data/raw/ → Cleaning Pipeline → data/cleaned/ & SQLite → Pandas/NumPy/SciPy → FastAPI Backend → React Frontend
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

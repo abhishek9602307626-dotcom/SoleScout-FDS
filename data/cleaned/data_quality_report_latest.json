@@ -1,0 +1,79 @@
+{
+  "raw_records": 6,
+  "clean_records": 3,
+  "duplicate_records": 3,
+  "records_removed": 3,
+  "cleaning_percentage": 50.0,
+  "quality_errors": {
+    "invalid_prices": 0,
+    "invalid_timestamps": 0,
+    "missing_identifiers": 0,
+    "missing_names": 0
+  },
+  "missing_values": {
+    "retail_price": {
+      "count": 1,
+      "percentage": 33.3
+    },
+    "discount": {
+      "count": 3,
+      "percentage": 100.0
+    },
+    "size": {
+      "count": 3,
+      "percentage": 100.0
+    },
+    "seller": {
+      "count": 3,
+      "percentage": 100.0
+    },
+    "outlier_type": {
+      "count": 3,
+      "percentage": 100.0
+    },
+    "outlier_reason": {
+      "count": 3,
+      "percentage": 100.0
+    }
+  },
+  "statistical_outliers": {
+    "detected": 0,
+    "policy": "Preserved in clean dataset for analytical integrity (is_outlier=True)",
+    "outliers_preserved": true
+  },
+  "removed_records": [
+    {
+      "raw_index": 3,
+      "product_id": "323941 992",
+      "product_name": "Air Jordan 16/7 Retro 'Countdown Pack'",
+      "raw_price": 423.0,
+      "reasons": "Duplicate observation for (323941 992, 2026-11-03) - First observation preserved",
+      "category": "Duplicate Record Purged"
+    },
+    {
+      "raw_index": 4,
+      "product_id": "454486 008",
+      "product_name": "Air Jordan 2011 Q Flight 'Year Of The Rabbit'",
+      "raw_price": 136.0,
+      "reasons": "Duplicate observation for (454486 008, 2026-11-03) - First observation preserved",
+      "category": "Duplicate Record Purged"
+    },
+    {
+      "raw_index": 5,
+      "product_id": "DV1599 378",
+      "product_name": "23 Engineered Pants Pilgrim",
+      "raw_price": 50.0,
+      "reasons": "Duplicate observation for (DV1599 378, 2026-11-03) - First observation preserved",
+      "category": "Duplicate Record Purged"
+    }
+  ],
+  "reproducibility": {
+    "timestamp": "2026-11-03T17:33:34.258552+00:00",
+    "pipeline_version": "2.0-fds",
+    "iqr_multiplier": 1.5,
+    "unique_key": [
+      "product_id",
+      "collection_date"
+    ]
+  }
+}

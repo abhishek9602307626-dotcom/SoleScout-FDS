@@ -1,0 +1,472 @@
+{
+  "price_distribution": [
+    {
+      "range": "$50 - $125",
+      "count": 2,
+      "pct": 6.2
+    },
+    {
+      "range": "$125 - $200",
+      "count": 7,
+      "pct": 21.9
+    },
+    {
+      "range": "$200 - $275",
+      "count": 4,
+      "pct": 12.5
+    },
+    {
+      "range": "$275 - $350",
+      "count": 11,
+      "pct": 34.4
+    },
+    {
+      "range": "$350 - $425",
+      "count": 5,
+      "pct": 15.6
+    },
+    {
+      "range": "$425 - $500",
+      "count": 2,
+      "pct": 6.2
+    },
+    {
+      "range": "$500 - $575",
+      "count": 0,
+      "pct": 0.0
+    },
+    {
+      "range": "$575 - $650",
+      "count": 1,
+      "pct": 3.1
+    }
+  ],
+  "brand_comparison": [
+    {
+      "brand": "Air Jordan",
+      "mean_price": 362.27,
+      "median_price": 380.0,
+      "min_price": 136.0,
+      "max_price": 650.0,
+      "count": 15
+    },
+    {
+      "brand": "Nike",
+      "mean_price": 123.33,
+      "median_price": 132.5,
+      "min_price": 60.0,
+      "max_price": 150.0,
+      "count": 6
+    },
+    {
+      "brand": "adidas",
+      "mean_price": 323.0,
+      "median_price": 320.0,
+      "min_price": 310.0,
+      "max_price": 345.0,
+      "count": 5
+    },
+    {
+      "brand": "New Balance",
+      "mean_price": 206.0,
+      "median_price": 205.0,
+      "min_price": 195.0,
+      "max_price": 220.0,
+      "count": 5
+    },
+    {
+      "brand": "Jordan",
+      "mean_price": 50.0,
+      "median_price": 50.0,
+      "min_price": 50.0,
+      "max_price": 50.0,
+      "count": 1
+    }
+  ],
+  "price_trends": [
+    {
+      "date": "2026-02-01",
+      "avg_price": 135.0,
+      "median_price": 135.0,
+      "volume": 1
+    },
+    {
+      "date": "2026-02-02",
+      "avg_price": 195.0,
+      "median_price": 195.0,
+      "volume": 1
+    },
+    {
+      "date": "2026-02-05",
+      "avg_price": 310.0,
+      "median_price": 310.0,
+      "volume": 1
+    },
+    {
+      "date": "2026-02-08",
+      "avg_price": 140.0,
+      "median_price": 140.0,
+      "volume": 1
+    },
+    {
+      "date": "2026-02-10",
+      "avg_price": 240.0,
+      "median_price": 240.0,
+      "volume": 2
+    },
+    {
+      "date": "2026-02-12",
+      "avg_price": 320.0,
+      "median_price": 320.0,
+      "volume": 1
+    },
+    {
+      "date": "2026-02-14",
+      "avg_price": 285.0,
+      "median_price": 285.0,
+      "volume": 1
+    },
+    {
+      "date": "2026-02-15",
+      "avg_price": 255.0,
+      "median_price": 255.0,
+      "volume": 2
+    },
+    {
+      "date": "2026-02-16",
+      "avg_price": 395.0,
+      "median_price": 395.0,
+      "volume": 1
+    },
+    {
+      "date": "2026-02-17",
+      "avg_price": 420.0,
+      "median_price": 420.0,
+      "volume": 1
+    },
+    {
+      "date": "2026-02-18",
+      "avg_price": 265.0,
+      "median_price": 265.0,
+      "volume": 2
+    },
+    {
+      "date": "2026-02-19",
+      "avg_price": 345.0,
+      "median_price": 345.0,
+      "volume": 1
+    },
+    {
+      "date": "2026-02-20",
+      "avg_price": 280.0,
+      "median_price": 280.0,
+      "volume": 2
+    },
+    {
+      "date": "2026-02-22",
+      "avg_price": 290.0,
+      "median_price": 290.0,
+      "volume": 1
+    },
+    {
+      "date": "2026-02-24",
+      "avg_price": 315.0,
+      "median_price": 315.0,
+      "volume": 1
+    },
+    {
+      "date": "2026-02-25",
+      "avg_price": 312.5,
+      "median_price": 312.5,
+      "volume": 2
+    },
+    {
+      "date": "2026-02-26",
+      "avg_price": 295.0,
+      "median_price": 295.0,
+      "volume": 1
+    },
+    {
+      "date": "2026-02-28",
+      "avg_price": 125.0,
+      "median_price": 125.0,
+      "volume": 1
+    },
+    {
+      "date": "2026-03-01",
+      "avg_price": 267.0,
+      "median_price": 305.0,
+      "volume": 5
+    },
+    {
+      "date": "2026-03-02",
+      "avg_price": 650.0,
+      "median_price": 650.0,
+      "volume": 1
+    },
+    {
+      "date": "2026-11-03",
+      "avg_price": 203.0,
+      "median_price": 136.0,
+      "volume": 3
+    }
+  ],
+  "outliers_scatter": [
+    {
+      "product_id": "323941 992",
+      "name": "Air Jordan 16/7 Retro 'Countdown Pack'",
+      "brand": "Air Jordan",
+      "price": 423.0,
+      "retail_price": 310.0,
+      "is_outlier": false
+    },
+    {
+      "product_id": "454486 008",
+      "name": "Air Jordan 2011 Q Flight 'Year Of The Rabbit'",
+      "brand": "Air Jordan",
+      "price": 136.0,
+      "retail_price": 120.0,
+      "is_outlier": false
+    },
+    {
+      "product_id": "DV1599 378",
+      "name": "23 Engineered Pants Pilgrim",
+      "brand": "Jordan",
+      "price": 50.0,
+      "retail_price": null,
+      "is_outlier": false
+    },
+    {
+      "product_id": "DZ5485-612",
+      "name": "Air Jordan 1 Retro High OG 'Chicago Lost & Found'",
+      "brand": "Air Jordan",
+      "price": 380.0,
+      "retail_price": 180.0,
+      "is_outlier": false
+    },
+    {
+      "product_id": "DZ5485-612",
+      "name": "Air Jordan 1 Retro High OG 'Chicago Lost & Found'",
+      "brand": "Air Jordan",
+      "price": 395.0,
+      "retail_price": 180.0,
+      "is_outlier": false
+    },
+    {
+      "product_id": "DZ5485-612",
+      "name": "Air Jordan 1 Retro High OG 'Chicago Lost & Found'",
+      "brand": "Air Jordan",
+      "price": 420.0,
+      "retail_price": 180.0,
+      "is_outlier": false
+    },
+    {
+      "product_id": "DZ5485-612",
+      "name": "Air Jordan 1 Retro High OG 'Chicago Lost & Found'",
+      "brand": "Air Jordan",
+      "price": 410.0,
+      "retail_price": 180.0,
+      "is_outlier": false
+    },
+    {
+      "product_id": "DZ5485-612",
+      "name": "Air Jordan 1 Retro High OG 'Chicago Lost & Found'",
+      "brand": "Air Jordan",
+      "price": 425.0,
+      "retail_price": 180.0,
+      "is_outlier": false
+    },
+    {
+      "product_id": "DZ5485-612",
+      "name": "Air Jordan 1 Retro High OG 'Chicago Lost & Found'",
+      "brand": "Air Jordan",
+      "price": 435.0,
+      "retail_price": 180.0,
+      "is_outlier": false
+    },
+    {
+      "product_id": "DZ5485-612",
+      "name": "Air Jordan 1 Retro High OG 'Chicago Lost & Found'",
+      "brand": "Air Jordan",
+      "price": 650.0,
+      "retail_price": 180.0,
+      "is_outlier": false
+    },
+    {
+      "product_id": "DH6927-140",
+      "name": "Air Jordan 4 Retro 'Military Blue' (2024)",
+      "brand": "Air Jordan",
+      "price": 275.0,
+      "retail_price": 215.0,
+      "is_outlier": false
+    },
+    {
+      "product_id": "DH6927-140",
+      "name": "Air Jordan 4 Retro 'Military Blue' (2024)",
+      "brand": "Air Jordan",
+      "price": 285.0,
+      "retail_price": 215.0,
+      "is_outlier": false
+    },
+    {
+      "product_id": "DH6927-140",
+      "name": "Air Jordan 4 Retro 'Military Blue' (2024)",
+      "brand": "Air Jordan",
+      "price": 310.0,
+      "retail_price": 215.0,
+      "is_outlier": false
+    },
+    {
+      "product_id": "DH6927-140",
+      "name": "Air Jordan 4 Retro 'Military Blue' (2024)",
+      "brand": "Air Jordan",
+      "price": 290.0,
+      "retail_price": 215.0,
+      "is_outlier": false
+    },
+    {
+      "product_id": "DH6927-140",
+      "name": "Air Jordan 4 Retro 'Military Blue' (2024)",
+      "brand": "Air Jordan",
+      "price": 295.0,
+      "retail_price": 215.0,
+      "is_outlier": false
+    },
+    {
+      "product_id": "DH6927-140",
+      "name": "Air Jordan 4 Retro 'Military Blue' (2024)",
+      "brand": "Air Jordan",
+      "price": 305.0,
+      "retail_price": 215.0,
+      "is_outlier": false
+    },
+    {
+      "product_id": "DD1391-100",
+      "name": "Nike Dunk Low Retro 'White Black Panda'",
+      "brand": "Nike",
+      "price": 135.0,
+      "retail_price": 115.0,
+      "is_outlier": false
+    },
+    {
+      "product_id": "DD1391-100",
+      "name": "Nike Dunk Low Retro 'White Black Panda'",
+      "brand": "Nike",
+      "price": 140.0,
+      "retail_price": 115.0,
+      "is_outlier": false
+    },
+    {
+      "product_id": "DD1391-100",
+      "name": "Nike Dunk Low Retro 'White Black Panda'",
+      "brand": "Nike",
+      "price": 130.0,
+      "retail_price": 115.0,
+      "is_outlier": false
+    },
+    {
+      "product_id": "DD1391-100",
+      "name": "Nike Dunk Low Retro 'White Black Panda'",
+      "brand": "Nike",
+      "price": 150.0,
+      "retail_price": 115.0,
+      "is_outlier": false
+    },
+    {
+      "product_id": "DD1391-100",
+      "name": "Nike Dunk Low Retro 'White Black Panda'",
+      "brand": "Nike",
+      "price": 125.0,
+      "retail_price": 115.0,
+      "is_outlier": false
+    },
+    {
+      "product_id": "DD1391-100",
+      "name": "Nike Dunk Low Retro 'White Black Panda'",
+      "brand": "Nike",
+      "price": 60.0,
+      "retail_price": 115.0,
+      "is_outlier": false
+    },
+    {
+      "product_id": "B37571",
+      "name": "adidas Yeezy Boost 350 V2 'Blue Tint'",
+      "brand": "adidas",
+      "price": 310.0,
+      "retail_price": 230.0,
+      "is_outlier": false
+    },
+    {
+      "product_id": "B37571",
+      "name": "adidas Yeezy Boost 350 V2 'Blue Tint'",
+      "brand": "adidas",
+      "price": 320.0,
+      "retail_price": 230.0,
+      "is_outlier": false
+    },
+    {
+      "product_id": "B37571",
+      "name": "adidas Yeezy Boost 350 V2 'Blue Tint'",
+      "brand": "adidas",
+      "price": 345.0,
+      "retail_price": 230.0,
+      "is_outlier": false
+    },
+    {
+      "product_id": "B37571",
+      "name": "adidas Yeezy Boost 350 V2 'Blue Tint'",
+      "brand": "adidas",
+      "price": 315.0,
+      "retail_price": 230.0,
+      "is_outlier": false
+    },
+    {
+      "product_id": "B37571",
+      "name": "adidas Yeezy Boost 350 V2 'Blue Tint'",
+      "brand": "adidas",
+      "price": 325.0,
+      "retail_price": 230.0,
+      "is_outlier": false
+    },
+    {
+      "product_id": "M990GL6",
+      "name": "New Balance 990v6 Made in USA 'Grey'",
+      "brand": "New Balance",
+      "price": 195.0,
+      "retail_price": 200.0,
+      "is_outlier": false
+    },
+    {
+      "product_id": "M990GL6",
+      "name": "New Balance 990v6 Made in USA 'Grey'",
+      "brand": "New Balance",
+      "price": 205.0,
+      "retail_price": 200.0,
+      "is_outlier": false
+    },
+    {
+      "product_id": "M990GL6",
+      "name": "New Balance 990v6 Made in USA 'Grey'",
+      "brand": "New Balance",
+      "price": 220.0,
+      "retail_price": 200.0,
+      "is_outlier": false
+    },
+    {
+      "product_id": "M990GL6",
+      "name": "New Balance 990v6 Made in USA 'Grey'",
+      "brand": "New Balance",
+      "price": 200.0,
+      "retail_price": 200.0,
+      "is_outlier": false
+    },
+    {
+      "product_id": "M990GL6",
+      "name": "New Balance 990v6 Made in USA 'Grey'",
+      "brand": "New Balance",
+      "price": 210.0,
+      "retail_price": 200.0,
+      "is_outlier": false
+    }
+  ]
+}

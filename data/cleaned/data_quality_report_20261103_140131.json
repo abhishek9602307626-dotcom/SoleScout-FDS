@@ -1,0 +1,53 @@
+{
+  "raw_records": 6,
+  "clean_records": 3,
+  "duplicate_records": 3,
+  "records_removed": 3,
+  "cleaning_percentage": 50.0,
+  "quality_errors": {
+    "invalid_prices": 0,
+    "invalid_timestamps": 0,
+    "missing_identifiers": 0,
+    "missing_names": 0
+  },
+  "missing_values": {
+    "retail_price": {
+      "count": 1,
+      "percentage": 33.3
+    },
+    "discount": {
+      "count": 3,
+      "percentage": 100.0
+    },
+    "size": {
+      "count": 3,
+      "percentage": 100.0
+    },
+    "seller": {
+      "count": 3,
+      "percentage": 100.0
+    },
+    "outlier_type": {
+      "count": 3,
+      "percentage": 100.0
+    },
+    "outlier_reason": {
+      "count": 3,
+      "percentage": 100.0
+    }
+  },
+  "statistical_outliers": {
+    "detected": 0,
+    "policy": "Preserved in clean dataset for analytical integrity (is_outlier=True)",
+    "outliers_preserved": true
+  },
+  "reproducibility": {
+    "timestamp": "2026-11-03T14:01:31.895159+00:00",
+    "pipeline_version": "2.0-fds",
+    "iqr_multiplier": 1.5,
+    "unique_key": [
+      "product_id",
+      "collection_date"
+    ]
+  }
+}
